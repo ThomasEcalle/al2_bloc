@@ -12,9 +12,12 @@ class ProductsBloc extends Bloc<ProductsEvent, ProductsState> {
   }
 
   void _onGetAllProducts(GetAllProducts event, Emitter<ProductsState> emit) async {
-    print('Coucou, on fait l\'appel réseau');
-    await Future.delayed(Duration(seconds: 2));
+    emit(ProductsState(status: ProductsStatus.loading));
+
+    await Future.delayed(const Duration(seconds: 2));
+
     final newState = ProductsState(
+      status: ProductsStatus.success,
       products: [
         Product(name: 'iPhone 15', price: 10),
         Product(name: 'Pixel 7', price: 42),

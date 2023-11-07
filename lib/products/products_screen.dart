@@ -25,17 +25,31 @@ class _ProductsScreenState extends State<ProductsScreen> {
       ),
       body: BlocBuilder<ProductsBloc, ProductsState>(
         builder: (context, state) {
-          final products = state.products;
-
-          if (products.isEmpty) {
-            return Center(
-              child: Text('Oups, c\'est vide !'),
-            );
+          switch (state.status) {
+            case ProductsStatus.initial:
+              return const SizedBox();
+            case ProductsStatus.loading:
+              return const Center(
+                child: CircularProgressIndicator(),
+              );
+            case ProductsStatus.error:
+              return const Center(
+                child: Text('Oups, une erreur est survenue.'),
+              );
+            case ProductsStatus.success:
+              final products = state.products;
+              return ListView.separated(
+                itemCount: products.length,
+                separatorBuilder: (context, _) => const SizedBox(height: 10),
+                itemBuilder: (context, index) {
+                  final product = products[index];
+                  return ListTile(
+                    title: Text(product.name ?? ''),
+                    subtitle: Text('${product.price}'),
+                  );
+                },
+              );
           }
-
-          return Center(
-            child: Text('OOn a des trucs !'),
-          );
         },
       ),
     );
