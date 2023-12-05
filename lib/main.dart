@@ -3,6 +3,9 @@ import 'package:al2_bloc/products/cart_bloc/cart_bloc.dart';
 import 'package:al2_bloc/products/cart_screen/cart_screen.dart';
 import 'package:al2_bloc/products/products_bloc/products_bloc.dart';
 import 'package:al2_bloc/products/products_screen.dart';
+import 'package:al2_bloc/products/services/api_data_source.dart';
+import 'package:al2_bloc/products/services/fake_data_source.dart';
+import 'package:al2_bloc/products/services/products_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -17,30 +20,39 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MultiBlocProvider(
-      providers: [
-        BlocProvider(create: (context) => ProductsBloc()),
-        BlocProvider(create: (context) => CartBloc()),
-      ],
-      child: MaterialApp(
-        routes: {
-          '/': (context) => const ProductsScreen(),
-          CartScreen.routeName: (context) => const CartScreen(),
-        },
-        onGenerateRoute: (settings) {
-          Widget content = const SizedBox();
+    return RepositoryProvider(
+      create: (context) => ProductsRepository(
+        productsDataSource: FakeDataSource(),
+      ),
+      child: MultiBlocProvider(
+        providers: [
+          BlocProvider(
+            create: (context) => ProductsBloc(
+              productsRepository: context.read<ProductsRepository>(),
+            ),
+          ),
+          BlocProvider(create: (context) => CartBloc()),
+        ],
+        child: MaterialApp(
+          routes: {
+            '/': (context) => const ProductsScreen(),
+            CartScreen.routeName: (context) => const CartScreen(),
+          },
+          onGenerateRoute: (settings) {
+            Widget content = const SizedBox();
 
-          switch (settings.name) {
-            case ProductDetailScreen.routeName:
-              final arguments = settings.arguments;
-              if (arguments is Product) {
-                content = ProductDetailScreen(product: arguments);
-              }
-              break;
-          }
+            switch (settings.name) {
+              case ProductDetailScreen.routeName:
+                final arguments = settings.arguments;
+                if (arguments is Product) {
+                  content = ProductDetailScreen(product: arguments);
+                }
+                break;
+            }
 
-          return MaterialPageRoute(builder: (context) => content);
-        },
+            return MaterialPageRoute(builder: (context) => content);
+          },
+        ),
       ),
     );
   }
