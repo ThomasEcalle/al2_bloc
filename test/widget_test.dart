@@ -5,26 +5,42 @@
 // gestures. You can also use WidgetTester to find child widgets in the widget
 // tree, read text, and verify that the values of widget properties are correct.
 
+import 'package:al2_bloc/products/cart_bloc/cart_bloc.dart';
+import 'package:al2_bloc/products/products_bloc/products_bloc.dart';
+import 'package:al2_bloc/products/products_screen.dart';
+import 'package:al2_bloc/products/services/fake_data_source.dart';
+import 'package:al2_bloc/products/services/products_repository.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:al2_bloc/main.dart';
+Widget _setUpProductsScreen() {
+  return RepositoryProvider(
+    create: (context) => ProductsRepository(
+      productsDataSource: FakeDataSource(),
+    ),
+    child: MultiBlocProvider(
+      providers: [
+        BlocProvider(
+          create: (context) => ProductsBloc(
+            productsRepository: context.read<ProductsRepository>(),
+          ),
+        ),
+        BlocProvider(create: (context) => CartBloc()),
+      ],
+      child: MaterialApp(
+        home: ProductsScreen(),
+      ),
+    ),
+  );
+}
 
 void main() {
-  testWidgets('Counter increments smoke test', (WidgetTester tester) async {
-    // Build our app and trigger a frame.
-    await tester.pumpWidget(const MyApp());
-
-    // Verify that our counter starts at 0.
-    expect(find.text('0'), findsOneWidget);
-    expect(find.text('1'), findsNothing);
-
-    // Tap the '+' icon and trigger a frame.
-    await tester.tap(find.byIcon(Icons.add));
-    await tester.pump();
-
-    // Verify that our counter has incremented.
-    expect(find.text('0'), findsNothing);
-    expect(find.text('1'), findsOneWidget);
+  group('$ProductsScreen', () {
+    testWidgets('$ProductsScreen should display the right title', (WidgetTester tester) async {
+      await tester.pumpWidget(_setUpProductsScreen());
+      await tester.pump(const Duration(seconds: 3));
+      expect(find.text('Products'), findsOneWidget);
+    });
   });
 }
