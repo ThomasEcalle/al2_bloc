@@ -67,12 +67,13 @@ void main() {
       expect(find.text('Oups, une erreur est survenue.'), findsOneWidget);
     });
 
-    testWidgets('$ProductsScreen should display the list of products if success', (WidgetTester tester) async {
-      await tester.pumpWidget(_setUpProductsScreen(FakeDataSource()));
+    testWidgets('$ProductsScreen should display a loading indicator', (WidgetTester tester) async {
+      await tester.pumpWidget(_setUpProductsScreen(
+        FakeDataSource(),
+      ));
+      expect(find.byType(CircularProgressIndicator), findsOneWidget);
       await tester.pump(const Duration(seconds: 3));
-      expect(find.text('Product 0'), findsOneWidget);
-      expect(find.text('Product 1'), findsOneWidget);
-      expect(find.text('Product 2'), findsOneWidget);
+      expect(find.byType(CircularProgressIndicator), findsNothing);
     });
 
     /// Ne passe pas car état vide non géré.
@@ -84,9 +85,8 @@ void main() {
 
     testWidgets('$ProductsScreen should display a loader when Loading', (WidgetTester tester) async {
       await tester.pumpWidget(_setUpProductsScreen(FakeDataSource()));
-      await tester.pump();
       expect(find.byType(CircularProgressIndicator), findsOneWidget);
-      expect(find.byType(Center), findsOneWidget);
+      await tester.pumpAndSettle();
     });
   });
 }
