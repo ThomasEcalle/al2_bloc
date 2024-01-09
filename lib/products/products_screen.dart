@@ -36,9 +36,7 @@ class _ProductsScreenState extends State<ProductsScreen> {
       body: BlocBuilder<ProductsBloc, ProductsState>(
         builder: (context, state) {
           switch (state.status) {
-            case ProductsStatus.initial:
-              return const SizedBox();
-            case ProductsStatus.loading:
+            case ProductsStatus.initial || ProductsStatus.loading:
               return const Center(
                 child: CircularProgressIndicator(),
               );

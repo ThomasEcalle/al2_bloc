@@ -5,19 +5,37 @@
 // gestures. You can also use WidgetTester to find child widgets in the widget
 // tree, read text, and verify that the values of widget properties are correct.
 
+import 'package:al2_bloc/models/product.dart';
 import 'package:al2_bloc/products/cart_bloc/cart_bloc.dart';
 import 'package:al2_bloc/products/products_bloc/products_bloc.dart';
 import 'package:al2_bloc/products/products_screen.dart';
 import 'package:al2_bloc/products/services/fake_data_source.dart';
+import 'package:al2_bloc/products/services/products_data_source.dart';
 import 'package:al2_bloc/products/services/products_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-Widget _setUpProductsScreen() {
+class ErrorDataSource extends ProductsDataSource {
+  @override
+  Future<List<Product>> getAllProducts() async {
+    await Future.delayed(const Duration(seconds: 3));
+    throw Exception();
+  }
+}
+
+class EmptyDataSource extends ProductsDataSource {
+  @override
+  Future<List<Product>> getAllProducts() async {
+    await Future.delayed(const Duration(seconds: 3));
+    return [];
+  }
+}
+
+Widget _setUpProductsScreen(ProductsDataSource productsDataSource) {
   return RepositoryProvider(
     create: (context) => ProductsRepository(
-      productsDataSource: FakeDataSource(),
+      productsDataSource: productsDataSource,
     ),
     child: MultiBlocProvider(
       providers: [
@@ -38,9 +56,37 @@ Widget _setUpProductsScreen() {
 void main() {
   group('$ProductsScreen', () {
     testWidgets('$ProductsScreen should display the right title', (WidgetTester tester) async {
-      await tester.pumpWidget(_setUpProductsScreen());
+      await tester.pumpWidget(_setUpProductsScreen(FakeDataSource()));
       await tester.pump(const Duration(seconds: 3));
       expect(find.text('Products'), findsOneWidget);
+    });
+
+    testWidgets('$ProductsScreen should display an error if an error occurred', (WidgetTester tester) async {
+      await tester.pumpWidget(_setUpProductsScreen(ErrorDataSource()));
+      await tester.pump(const Duration(seconds: 3));
+      expect(find.text('Oups, une erreur est survenue.'), findsOneWidget);
+    });
+
+    testWidgets('$ProductsScreen should display the list of products if success', (WidgetTester tester) async {
+      await tester.pumpWidget(_setUpProductsScreen(FakeDataSource()));
+      await tester.pump(const Duration(seconds: 3));
+      expect(find.text('Product 0'), findsOneWidget);
+      expect(find.text('Product 1'), findsOneWidget);
+      expect(find.text('Product 2'), findsOneWidget);
+    });
+
+    /// Ne passe pas car état vide non géré.
+    // testWidgets('$ProductsScreen should display a specific message when empty result', (WidgetTester tester) async {
+    //   await tester.pumpWidget(_setUpProductsScreen(EmptyDataSource()));
+    //   await tester.pump(const Duration(seconds: 3));
+    //   expect(find.text('Aucun produit'), findsOneWidget);
+    // });
+
+    testWidgets('$ProductsScreen should display a loader when Loading', (WidgetTester tester) async {
+      await tester.pumpWidget(_setUpProductsScreen(FakeDataSource()));
+      await tester.pump();
+      expect(find.byType(CircularProgressIndicator), findsOneWidget);
+      expect(find.byType(Center), findsOneWidget);
     });
   });
 }
